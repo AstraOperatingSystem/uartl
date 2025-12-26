@@ -9,6 +9,9 @@
 
 static inline int _tx1(uartl_handle_t *handle, uint8_t type, int timeout)
 {
+	uint8_t esc = UARTL_ESC;
+	int err = handle->tx(handle->serial, &esc, 1, timeout);
+	if (err) return err;
 	return handle->tx(handle->serial, &type, 1, timeout);
 }
 
