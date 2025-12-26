@@ -43,6 +43,9 @@ class UARTL:
 		return sent
 
 	def disconnect(self) -> None:
+		if self.state == _State.CONNECTING:
+			self.state = _State.DISCONN
+			return
 		if self.state != _State.CONNECTED: return
 		
 		self.state = _State.LEAVING
@@ -76,6 +79,7 @@ class UARTL:
 				sleep(0.1) # Do nothing
 			
 	def _recv_state_machine_conn(self) -> None:
+		self._serial.timeout = None
 		buff = self._serial.read(1)
 		byte = buff[0]
 
@@ -109,6 +113,7 @@ class UARTL:
 				self._rx_state = _RXSTT.LISTEN
 
 	def _recv_state_machine_wait(self) -> None:
+		self._serial.timeout = None
 		buff = self._serial.read(1)
 		byte = buff[0]
 
