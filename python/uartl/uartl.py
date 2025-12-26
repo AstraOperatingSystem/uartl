@@ -11,7 +11,6 @@ class _State(Enum):
 	CONNECTING = 1
 	CONNECTED = 2
 	LEAVING = 3
-	EXIT = 99
 
 class _RXSTT(Enum):
 	LISTEN = 0
@@ -113,14 +112,13 @@ class UARTL:
 		buff = self._serial.read(1)
 		byte = buff[0]
 
-		if self._rx_state == _RXSTT.LISTEN:
-			if byte == UARTL.ESC:   	self._rx_state = _RXSTT.INIT   	# Ignore if not start of packet
+		if self._rx_state == _RXSTT.LISTEN and byte == UARTL.ESC:
+			self._rx_state = _RXSTT.INIT
 		elif self._rx_state == _RXSTT.INIT:
-			if byte == UARTL.ESC:   	self._rx_state = _RXSTT.LISTEN 	# Caught mid data
-			elif byte == UARTL.JOIN:                                   	# ACK joins
-				self._send(UARTL.ACK)
-				self._rx_state = _RXSTT.LISTEN
-			else: 						self._rx_state = _RXSTT.LISTEN  # Ignore other bytes
+			if byte == UARTL.JOIN:
+				self._send(UARTL.ACK)			# ACK joins
+				self.state = _State.CONNECTED
+			self._rx_state = _RXSTT.LISTEN
 
 	def _send_data(self, data: bytes = b"", timeout: float | None = None) -> bool:
 		return self._send(UARTL.DATA, data + bytes([UARTL.ESC, UARTL.END]), timeout)
